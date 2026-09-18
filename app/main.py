@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from app.database.init_db import init_db
 
 from app.routes.games import router as games_router
 from app.routes.rounds import router as rounds_router
@@ -18,6 +19,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+init_db()
 
 app.include_router(games_router)
 app.include_router(rounds_router)
