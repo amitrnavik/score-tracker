@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>3 Patti Score Tracker</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <header class="app-header">
+        <h1>3 Patti Score Tracker</h1>
+    </header>
+
+    <!-- CREATE GAME -->
+    <section id="create-screen" class="screen">
+
+        <div class="card">
+
+            <h2>Start New Game</h2>
+
+            <div id="player-inputs">
+
+                <div class="player-input">
+                    <input
+                        type="text"
+                        placeholder="Player 1"
+                    >
+                </div>
+
+                <div class="player-input">
+                    <input
+                        type="text"
+                        placeholder="Player 2"
+                    >
+                </div>
+            </div>
+
+            <button
+                id="add-player-input"
+                class="secondary-button"
+            >
+                + Add Player
+            </button>
+
+            <button
+                id="create-game"
+                class="primary-button"
+            >
+                Start Game
+            </button>
+
+            <p id="create-error" class="error"></p>
+
+        </div>
+
+    </section>
+
+
+    <!-- GAME SCREEN -->
+    <section
+        id="game-screen"
+        class="screen hidden"
+    >
+
+        <div class="game-info card">
+
+            <div>
+                <span class="label">Game Code</span>
+
+                <strong
+                    id="game-code"
+                    class="game-code"
+                ></strong>
+            </div>
+
+            <button
+                id="share-game"
+                class="secondary-button"
+            >
+                Share
+            </button>
+
+        </div>
+
+
+        <!-- BALANCES -->
+
+        <div class="card">
+
+            <h2>Current Balance</h2>
+
+            <div id="balances"></div>
+
+        </div>
+
+
+        <!-- SCOREBOARD -->
+
+        <div class="card scoreboard-card">
+
+            <div class="section-title">
+                <h2>Scoreboard</h2>
+
+                <button
+                    id="add-round"
+                    class="primary-button small"
+                >
+                    + Add Row
+                </button>
+            </div>
+
+            <div
+                id="round-form"
+                class="round-form hidden"
+            >
+                <h3>Enter Round Scores</h3>
+
+                <div id="round-score-inputs"></div>
+
+                <p class="round-help">
+                    Enter 0 for the winner.
+                </p>
+
+                <div class="round-form-actions">
+
+                    <button
+                        id="save-round"
+                        class="primary-button"
+                    >
+                        Save Round
+                    </button>
+
+                    <button
+                        id="cancel-round"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+                <p id="round-error" class="error"></p>
+            </div>
+
+            <div class="table-wrapper">
+
+                <table id="scoreboard">
+
+                    <thead>
+                        <tr id="scoreboard-header">
+                            <th>Round</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="scoreboard-body">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- PLAYERS -->
+
+        <div class="card">
+
+            <div class="section-title">
+                <h2>Players</h2>
+
+                <button
+                    id="add-player"
+                    class="secondary-button small"
+                >
+                    + Player
+                </button>
+            </div>
+
+            <div id="players-list"></div>
+
+        </div>
+
+
+        <!-- GAME ACTIONS -->
+
+        <div class="game-actions">
+
+            <button
+                id="settlement-button"
+                class="secondary-button"
+            >
+                View Settlement
+            </button>
+
+            <button
+                id="end-game"
+                class="danger-button"
+            >
+                End Game
+            </button>
+
+        </div>
+
+        <p id="game-error" class="error"></p>
+
+    </section>
+
+
+    <!-- SETTLEMENT SCREEN -->
+
+    <section
+        id="settlement-screen"
+        class="screen hidden"
+    >
+
+        <div class="card">
+
+            <h2>Final Settlement</h2>
+
+            <div id="settlement-balances"></div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Who Pays Whom?</h2>
+
+            <div id="payments"></div>
+
+        </div>
+
+        <button
+            id="back-to-game"
+            class="primary-button"
+        >
+            Back to Game
+        </button>
+
+    </section>
+
+</div>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>
