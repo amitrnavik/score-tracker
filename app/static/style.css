@@ -272,3 +272,133 @@ button:disabled {
     border-radius: 6px;
     letter-spacing: 3px;
 }
+
+.game-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.game-list-item:last-child {
+    border-bottom: none;
+}
+
+.empty-message {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+.game-list-section {
+    margin-top: 20px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.section-header > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-header h2 {
+    margin: 0;
+}
+
+.section-count {
+    font-size: 13px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #e9ecef;
+}
+
+.collapse-btn {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 6px 10px;
+}
+
+.game-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.game-list-card {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.game-main-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.game-code {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.game-details {
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.game-details span {
+    margin: 0 4px;
+}
+
+.game-players {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #666;
+    overflow-wrap: anywhere;
+}
+
+.game-started {
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.game-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.game-actions button {
+    flex: 1;
+}
+
+.empty-state {
+    padding: 20px;
+    text-align: center;
+    color: #777;
+    border: 1px dashed #ccc;
+    border-radius: 10px;
+}
+
+.hidden {
+    display: none !important;
+}

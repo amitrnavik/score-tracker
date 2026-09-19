@@ -1,6 +1,7 @@
 let currentGameId = null;
 let currentGame = null;
 let isViewer = false;
+let isManager = false;
 
 
 // ===============================
@@ -18,6 +19,12 @@ const playerInputs =
 
 const createError =
     document.getElementById("create-error");
+
+const newGameButton =
+    document.getElementById("new-game-button");
+
+const newGameForm =
+    document.getElementById("new-game-form");
 
 
 addPlayerInputButton.addEventListener("click", () => {
@@ -94,6 +101,14 @@ createGameButton.addEventListener("click", async () => {
         }
 
         currentGameId = data.game_id;
+        isManager = true;
+
+        if (data.manage_code) {
+            localStorage.setItem(
+                `game_${data.game_id}_manage_code`,
+                data.manage_code
+            );
+        }
 
         await loadGame();
 
@@ -153,7 +168,7 @@ function renderGame() {
         currentGame.status === "active";
 
     const canEdit =
-        isActive && !isViewer;
+        isActive && isManager;
 
     addRoundButton.disabled = !canEdit;
     addPlayerButton.disabled = !canEdit;
@@ -825,6 +840,14 @@ backToGameButton.addEventListener("click", () => {
 
 });
 
+newGameButton.addEventListener("click", () => {
+
+    newGameForm.classList.remove("hidden");
+
+    newGameButton.classList.add("hidden");
+
+});
+
 
 function renderSettlement(
     balanceData,
@@ -960,6 +983,7 @@ async function initializeApp() {
             .split("/")
             .filter(Boolean);
 
+
     if (
         pathParts.length === 2 &&
         pathParts[0] === "game"
@@ -969,6 +993,7 @@ async function initializeApp() {
             pathParts[1];
 
         isViewer = true;
+        isManager = false;
 
         try {
 
@@ -984,14 +1009,77 @@ async function initializeApp() {
                 error.message;
         }
 
-    } else {
+        return;
+    }
 
-        showScreen("create-screen");
+
+    if (
+        pathParts.length === 2 &&
+        pathParts[0] === "manage"
+    ) {
+
+        const manageCode =
+            pathParts[1];
+
+        isViewer = false;
+        isManager = true;
+
+        try {
+
+            const response =
+                await fetch(
+                    `/games/manage/${encodeURIComponent(
+                        manageCode
+                    )}`
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Game not found"
+                );
+            }
+
+            currentGameId =
+                data.game_id;
+
+            await loadGame();
+
+            showScreen("game-screen");
+
+        } catch (error) {
+
+            showScreen("create-screen");
+
+            createError.textContent =
+                error.message;
+        }
+
+        return;
+    }
+
+
+    isViewer = false;
+    isManager = false;
+
+    showScreen("create-screen");
+
+    try {
+
+        await loadGameList();
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load games:",
+            error
+        );
     }
 }
 
-
-initializeApp();
 
 // ===============================
 // AUTO REFRESH
@@ -1013,3 +1101,335 @@ setInterval(async () => {
     }
 
 }, 5000);
+
+
+async function loadGameList() {
+
+    const response =
+        await fetch("/games/");
+
+    const games =
+        await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            games.detail || "Unable to load games"
+        );
+    }
+
+    renderGameList(games);
+}
+
+function renderGameList(games) {
+    const runningList = document.getElementById("running-games-list");
+    const historyList = document.getElementById("history-games-list");
+
+    const runningCount = document.getElementById("running-games-count");
+    const historyCount = document.getElementById("history-games-count");
+
+    runningList.innerHTML = "";
+    historyList.innerHTML = "";
+
+    const runningGames = games.filter(game => game.status === "active");
+    const historyGames = games.filter(game => game.status !== "active");
+
+    runningCount.textContent = runningGames.length;
+    historyCount.textContent = historyGames.length;
+
+    if (runningGames.length === 0) {
+        runningList.innerHTML = `
+            <div class="empty-state">
+                No running games
+            </div>
+        `;
+    } else {
+        runningGames.forEach(game => {
+            runningList.appendChild(
+                createGameListItem(game, true)
+            );
+        });
+    }
+
+    if (historyGames.length === 0) {
+        historyList.innerHTML = `
+            <div class="empty-state">
+                No games in history
+            </div>
+        `;
+    } else {
+        historyGames.forEach(game => {
+            historyList.appendChild(
+                createGameListItem(game, false)
+            );
+        });
+    }
+}
+
+function createGameListItem(game, isRunning) {
+    const card = document.createElement("div");
+    card.className = "game-list-card";
+
+    let playerNames = [];
+
+    if (Array.isArray(game.players)) {
+        playerNames = game.players
+            .map(player => {
+                if (typeof player === "string") {
+                    return player;
+                }
+
+                return player.name || "";
+            })
+            .filter(Boolean);
+    } else if (Array.isArray(game.player_names)) {
+        playerNames = game.player_names.filter(Boolean);
+    }
+
+    const roundCount =
+        Number.isFinite(game.round_count)
+            ? game.round_count
+            : Array.isArray(game.rounds)
+                ? game.rounds.length
+                : 0;
+
+    const startedAt = game.created_at
+        ? formatGameDateTime(game.created_at)
+        : "";
+
+    card.innerHTML = `
+        <div class="game-info">
+            <div class="game-main-info">
+                <div class="game-code">
+                    ${escapeHtml(game.game_code)}
+                </div>
+
+                <div class="game-details">
+                    ${playerNames.length} Players
+                    <span>•</span>
+                    ${roundCount} Rounds
+                </div>
+
+                <div class="game-players">
+                    ${escapeHtml(playerNames)}
+                </div>
+            </div>
+
+            <div class="game-started">
+                <div>${startedAt.date}</div>
+                <div>${startedAt.time}</div>
+            </div>
+        </div>
+
+        <div class="game-actions">
+            ${
+                isRunning
+                    ? `
+                        <button
+                            class="secondary-btn continue-game-btn"
+                            type="button"
+                        >
+                            Continue
+                        </button>
+
+                        <button
+                            class="danger-btn end-game-btn"
+                            type="button"
+                        >
+                            End Game
+                        </button>
+                    `
+                    : `
+                        <button
+                            class="secondary-btn view-result-btn"
+                            type="button"
+                        >
+                            View Result
+                        </button>
+                    `
+            }
+        </div>
+    `;
+
+    if (isRunning) {
+        const continueButton =
+            card.querySelector(".continue-game-btn");
+
+        const endButton =
+            card.querySelector(".end-game-btn");
+
+        continueButton.addEventListener("click", () => {
+            continueGame(game);
+        });
+
+        endButton.addEventListener("click", () => {
+            endGameFromDashboard(game);
+        });
+    } else {
+        const viewButton =
+            card.querySelector(".view-result-btn");
+
+        viewButton.addEventListener("click", () => {
+            viewGameResult(game);
+        });
+    }
+
+    return card;
+}
+
+function setupDashboardToggles() {
+    const runningToggle = document.getElementById("toggle-running-games");
+    const historyToggle = document.getElementById("toggle-history-games");
+
+    const runningList = document.getElementById("running-games-list");
+    const historyList = document.getElementById("history-games-list");
+
+    // Default state:
+    // Running Games = open
+    // Game History = closed
+    runningList.classList.remove("hidden");
+    historyList.classList.add("hidden");
+
+    runningToggle.textContent = "▲";
+    historyToggle.textContent = "▼";
+
+    runningToggle.setAttribute("aria-expanded", "true");
+    historyToggle.setAttribute("aria-expanded", "false");
+
+    if (runningToggle) {
+        runningToggle.addEventListener("click", () => {
+            const isHidden = runningList.classList.toggle("hidden");
+
+            runningToggle.setAttribute(
+                "aria-expanded",
+                String(!isHidden)
+            );
+
+            runningToggle.textContent = isHidden ? "▼" : "▲";
+        });
+    }
+
+    if (historyToggle) {
+        historyToggle.addEventListener("click", () => {
+            const isHidden = historyList.classList.toggle("hidden");
+
+            historyToggle.setAttribute(
+                "aria-expanded",
+                String(!isHidden)
+            );
+
+            historyToggle.textContent = isHidden ? "▼" : "▲";
+        });
+    }
+}
+
+
+function formatGameDateTime(dateString) {
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+        return {
+            date: "",
+            time: ""
+        };
+    }
+
+    return {
+        date: date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }),
+        time: date.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        })
+    };
+}
+
+async function endGameFromDashboard(game) {
+
+    const gameId = game.id ?? game.game_id;
+
+    if (!gameId) {
+        alert("Game ID not found.");
+        console.error("Invalid game object:", game);
+        return;
+    }
+
+    const confirmed = confirm(
+        `Are you sure you want to end game ${game.game_code}?`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `/games/${gameId}/end`,
+            {
+                method: "POST"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail ||
+                "Failed to end game"
+            );
+        }
+
+        await loadGameList();
+
+        alert(
+            "Game ended successfully."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "End game error:",
+            error
+        );
+
+        alert(error.message);
+    }
+}
+
+function continueGame(game) {
+
+    const gameId = game.id ?? game.game_id;
+
+    let manageCode = game.manage_code;
+
+    if (!manageCode && gameId) {
+        manageCode = localStorage.getItem(
+            `game_${gameId}_manage_code`
+        );
+    }
+
+    if (!manageCode || manageCode === "undefined") {
+        alert(
+            "Management link not found for this game."
+        );
+        return;
+    }
+
+    window.location.href =
+        `/manage/${manageCode}`;
+}
+
+function viewGameResult(game) {
+    window.location.href = `/game/${game.game_code}`;
+}
+
+// ===============================
+// INITIALIZE APP
+// ===============================
+
+setupDashboardToggles();
+initializeApp();

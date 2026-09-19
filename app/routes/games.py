@@ -34,9 +34,11 @@ def create_game(
     db: Session = Depends(get_db),
 ):
     game_code = generate_game_code()
+    manage_code = generate_manage_code(12)
 
     game = Game(
         game_code=game_code,
+        manage_code=manage_code,
         status="active",
     )
 
@@ -59,6 +61,7 @@ def create_game(
     return {
         "game_id": game.id,
         "game_code": game.game_code,
+        "manage_code": game.manage_code,
         "players": game_data.players,
     }
 
@@ -436,3 +439,74 @@ def get_game_by_code(
         "game_code": game.game_code,
         "status": game.status,
     }
+
+def generate_manage_code(length: int = 12) -> str:
+    characters = string.ascii_letters + string.digits
+    return "".join(
+        secrets.choice(characters)
+        for _ in range(length)
+    )
+
+
+@router.get("/manage/{manage_code}")
+def get_manage_game(
+    manage_code: str,
+    db: Session = Depends(get_db),
+):
+    game = (
+        db.query(Game)
+        .filter(Game.manage_code == manage_code)
+        .first()
+    )
+
+    if not game:
+        raise HTTPException(
+            status_code=404,
+            detail="Game not found",
+        )
+
+    return {
+        "game_id": game.id,
+        "game_code": game.game_code,
+        "status": game.status,
+    }
+
+@router.get("/")
+def list_games(
+    db: Session = Depends(get_db),
+):
+    games = (
+        db.query(Game)
+        .order_by(Game.created_at.desc())
+        .all()
+    )
+
+    result = []
+
+    for game in games:
+
+        players = (
+            db.query(Player)
+            .filter(Player.game_id == game.id)
+            .all()
+        )
+
+        rounds = (
+            db.query(Round)
+            .filter(Round.game_id == game.id)
+            .count()
+        )
+
+        result.append({
+            "game_id": game.id,
+            "game_code": game.game_code,
+            "status": game.status,
+            "players": [
+                player.name
+                for player in players
+            ],
+            "round_count": rounds,
+            "created_at": game.created_at,
+        })
+
+    return result

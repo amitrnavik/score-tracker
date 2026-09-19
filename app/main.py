@@ -43,3 +43,9 @@ def game_page(game_code: str):
     return FileResponse(
         BASE_DIR / "static" / "index.html"
     )
+
+@app.get("/manage/{manage_code}")
+def manage_game_page(manage_code: str):
+    return FileResponse(
+        BASE_DIR / "static" / "index.html"
+    )
